@@ -5,12 +5,14 @@ import { ActivityIndicator, Dimensions, SafeAreaView, ScrollView, StyleSheet, Te
 import { LineChart } from 'react-native-chart-kit';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBhgDVccnxXHwMho86m_FiyXIHiMKkHwmM",
+  authDomain: "solar-simulation-58769.firebaseapp.com",
+  databaseURL: "https://solar-simulation-58769-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "solar-simulation-58769",
+  storageBucket: "solar-simulation-58769.firebasestorage.app",
+  messagingSenderId: "175895861897",
+  appId: "1:175895861897:web:ebea9092b149f78b1cc458",
+  measurementId: "G-7RSRK0T3RE"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -26,12 +28,15 @@ export default function App() {
     const q = query(collection(db, 'live_telemetry'), orderBy('timestamp', 'desc'), limit(15));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log("Data grabbed from Firebase! Docs found:", snapshot.size);
       if (!snapshot.empty) {
         const docs = snapshot.docs.map(doc => doc.data()).reverse();
         setHistory(docs);
         setCurrentData(docs[docs.length - 1]); 
         setLoading(false);
       }
+    }, (error) => {
+      console.error("🔥 FIREBASE CONNECTION ERROR:", error.message);
     });
 
     return () => unsubscribe();
@@ -56,7 +61,7 @@ export default function App() {
   }
 
   const { telemetry, analysis } = currentData;
-  const isAlarm = analysis?.System_Status === "ALARM" || analysis?.Physical_Alarm;
+  const isAlarm = analysis?.['System Status'] === "ALARM" || analysis?.Physical_Alarm;
   const statusColor = isAlarm ? '#ff4444' : '#00C851';
 
   const voltageData = {
@@ -102,7 +107,7 @@ export default function App() {
         <View style={[styles.card, { borderLeftWidth: 5, borderLeftColor: statusColor }]}>
           <Text style={styles.cardTitle}>AI Engine Status</Text>
           <Text style={[styles.statusText, { color: statusColor }]}>
-            {analysis?.System_Status || "NORMAL"}
+            {analysis?.['System Status'] || "NORMAL"}
           </Text>
           <Text style={styles.detailText}>
             Forecast Load: <Text style={{fontWeight: 'bold'}}>{analysis?.['Predicted Next Load (kW)']} kW</Text>
